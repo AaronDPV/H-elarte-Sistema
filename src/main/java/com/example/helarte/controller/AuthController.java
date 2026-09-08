@@ -2,6 +2,9 @@ package com.example.helarte.controller;
 
 import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.UsuarioRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,15 +22,24 @@ public class AuthController {
 
     @PostMapping("/registro")
     public String registrarUsuario(@RequestBody Usuario usuario) {
-        // Hasheo de la contraseña antes de insertar en BD
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        // Asignación de rol por defecto si es necesario
-        if(usuario.getRol() == null || usuario.getRol().isEmpty()) {
+        if (usuario.getRol() == null || usuario.getRol().isEmpty()) {
             usuario.setRol("USER");
         }
 
         usuarioRepository.save(usuario);
         return "Usuario registrado correctamente con contraseña encriptada";
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(Authentication authentication) {
+        // 'authentication.getName()' devuelve el email configurado en getUsername()
+        String email = authentication.getName();
+        
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return ResponseEntity.ok("Inicio de sesión exitoso. Bienvenido " + usuario.getUser() + " (" + usuario.getRol() + ")");
     }
 }

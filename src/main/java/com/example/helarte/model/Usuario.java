@@ -25,14 +25,20 @@ public class Usuario implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    private String rol; // Ejemplo de valores: "ADMIN", "USER"
+    private String rol;
 
     public Usuario() {}
 
     public Long getId() { return id; }
+
+    public String getUser() { return user; }
+    public void setUser(String user) { this.user = user; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
     public void setPassword(String password) { this.password = password; }
+
     public String getRol() { return rol; }
     public void setRol(String rol) { this.rol = rol; }
 
