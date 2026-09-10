@@ -34,7 +34,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(Authentication authentication) {
-        // 'authentication.getName()' devuelve el email configurado en getUsername()
         String email = authentication.getName();
         
         Usuario usuario = usuarioRepository.findByEmail(email)
