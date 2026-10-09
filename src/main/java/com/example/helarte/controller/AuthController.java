@@ -2,7 +2,6 @@ package com.example.helarte.controller;
 
 import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.UsuarioRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,10 +34,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(Authentication authentication) {
         String email = authentication.getName();
-        
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        return ResponseEntity.ok("Inicio de sesión exitoso. Bienvenido " + usuario.getUser() + " (" + usuario.getRol() + ")");
+        return ResponseEntity
+                .ok("Inicio de sesión exitoso. Bienvenido " + usuario.getUser() + " (" + usuario.getRol() + ")");
     }
 }

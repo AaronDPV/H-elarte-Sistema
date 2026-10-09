@@ -1,6 +1,5 @@
 package com.example.helarte.service;
 
-import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
