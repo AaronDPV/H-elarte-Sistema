@@ -3,6 +3,8 @@ package com.example.helarte.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,14 +26,22 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos de autenticación y visualización de catálogo
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/servicios/**").permitAll()
+                        // Endpoints públicos: registro y catálogo de servicios
+                        .requestMatchers("/auth/registro").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/servicios", "/servicios/**").permitAll()
+
+                        // Login procesado mediante la pestaña Authorization (Basic Auth)
+                        .requestMatchers("/auth/login").authenticated()
 
                         // Endpoints exclusivos de ADMINISTRADOR
                         .requestMatchers("/admin/**").hasRole("ADMIN")

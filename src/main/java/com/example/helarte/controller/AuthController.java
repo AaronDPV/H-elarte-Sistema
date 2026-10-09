@@ -1,17 +1,15 @@
 package com.example.helarte.controller;
 
 import com.example.helarte.dto.AuthResponseDTO;
-import com.example.helarte.dto.LoginDTO;
 import com.example.helarte.dto.UsuarioCreateDTO;
 import com.example.helarte.dto.UsuarioDTO;
+import com.example.helarte.exception.ResourceNotFoundException;
 import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.UsuarioRepository;
 import com.example.helarte.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,10 +47,10 @@ public class AuthController {
 
         String email = authentication.getName();
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
 
         AuthResponseDTO response = new AuthResponseDTO(
-                "Inicio de sesión exitoso. Bienvenido(a) al sistema de H-elarte",
+                "Inicio de sesión exitoso. Bienvenido(a) " + usuario.getUser() + " (" + usuario.getRol() + ")",
                 usuario.getId(),
                 usuario.getUser(),
                 usuario.getEmail(),

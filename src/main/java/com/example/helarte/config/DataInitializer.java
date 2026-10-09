@@ -30,37 +30,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Inicializar usuarios iniciales según los roles requeridos
-        if (usuarioRepository.count() == 0) {
-            Usuario admin = new Usuario(
-                    "Administrador Helarte",
-                    "admin@helarte.com",
-                    passwordEncoder.encode("admin123"),
-                    "ADMIN",
-                    "999111222"
-            );
-            usuarioRepository.save(admin);
-
-            Usuario empleado = new Usuario(
-                    "Carlos Colaborador",
-                    "empleado@helarte.com",
-                    passwordEncoder.encode("empleado123"),
-                    "EMPLEADO",
-                    "999333444"
-            );
-            usuarioRepository.save(empleado);
-
-            Usuario cliente = new Usuario(
-                    "Ana Cliente",
-                    "cliente@helarte.com",
-                    passwordEncoder.encode("cliente123"),
-                    "CLIENTE",
-                    "999555666"
-            );
-            usuarioRepository.save(cliente);
-
-            System.out.println(">>> [H-elarte] Usuarios de prueba inicializados con éxito.");
-        }
+        // Asegurar la existencia y contraseñas correctas para los 3 actores principales
+        inicializarOActualizarUsuario("Administrador Helarte", "admin@helarte.com", "admin123", "ADMIN", "999111222");
+        inicializarOActualizarUsuario("Carlos Colaborador", "empleado@helarte.com", "empleado123", "EMPLEADO", "999333444");
+        inicializarOActualizarUsuario("Ana Cliente", "cliente@helarte.com", "cliente123", "CLIENTE", "999555666");
 
         // Inicializar mesas si no existen
         if (mesaRepository.count() == 0) {
@@ -69,7 +42,6 @@ public class DataInitializer implements CommandLineRunner {
             mesaRepository.save(new Mesa(3, 4, "Salón Principal", "DISPONIBLE"));
             mesaRepository.save(new Mesa(4, 6, "Zona Jardín de Helados", "DISPONIBLE"));
             mesaRepository.save(new Mesa(5, 8, "Salón VIP Eventos", "DISPONIBLE"));
-
             System.out.println(">>> [H-elarte] Mesas del establecimiento inicializadas con éxito.");
         }
 
@@ -106,8 +78,25 @@ public class DataInitializer implements CommandLineRunner {
                     90,
                     true
             ));
-
             System.out.println(">>> [H-elarte] Catálogo de servicios de heladería inicializado con éxito.");
         }
+    }
+
+    private void inicializarOActualizarUsuario(String nombre, String email, String passwordPlana, String rol, String telefono) {
+        usuarioRepository.findByEmail(email).ifPresentOrElse(
+                usuarioExistente -> {
+                    // Actualizar contraseña asegurando BCrypt válido y rol correcto
+                    usuarioExistente.setPassword(passwordEncoder.encode(passwordPlana));
+                    usuarioExistente.setRol(rol);
+                    usuarioExistente.setActivo(true);
+                    usuarioRepository.save(usuarioExistente);
+                    System.out.println(">>> [H-elarte] Usuario verificado y credenciales sincronizadas: " + email);
+                },
+                () -> {
+                    Usuario nuevo = new Usuario(nombre, email, passwordEncoder.encode(passwordPlana), rol, telefono);
+                    usuarioRepository.save(nuevo);
+                    System.out.println(">>> [H-elarte] Usuario inicializado: " + email);
+                }
+        );
     }
 }
