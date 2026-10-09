@@ -2,6 +2,7 @@ package com.example.helarte.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,9 +29,36 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos de autenticación y visualización de catálogo
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/servicios/**").permitAll()
+
+                        // Endpoints exclusivos de ADMINISTRADOR
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/servicios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/servicios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/servicios/**").hasRole("ADMIN")
+
+                        // Endpoints para ADMINISTRADOR y EMPLEADO/COLABORADOR
+                        .requestMatchers(HttpMethod.GET, "/usuarios/**").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.POST, "/mesas/**").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.PUT, "/mesas/**").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/mesas/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/reservas").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.GET, "/reservas/fecha").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.GET, "/reservas/estado").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.PUT, "/reservas/*/estado").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+
+                        // Endpoints para CLIENTE autenticado (y roles superiores)
+                        .requestMatchers("/reservas/mis-reservas").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/reservas").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/reservas/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/reservas/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/mesas/**").authenticated()
+
+                        // Cualquier otra petición requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .httpBasic(withDefaults());
@@ -42,7 +70,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

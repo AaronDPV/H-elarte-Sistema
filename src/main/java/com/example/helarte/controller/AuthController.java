@@ -1,44 +1,64 @@
 package com.example.helarte.controller;
 
+import com.example.helarte.dto.AuthResponseDTO;
+import com.example.helarte.dto.LoginDTO;
+import com.example.helarte.dto.UsuarioCreateDTO;
+import com.example.helarte.dto.UsuarioDTO;
 import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.UsuarioRepository;
+import com.example.helarte.service.UsuarioService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
+    private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    // Inyección de dependencias por constructor
+    public AuthController(UsuarioService usuarioService, UsuarioRepository usuarioRepository) {
+        this.usuarioService = usuarioService;
         this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/registro")
-    public String registrarUsuario(@RequestBody Usuario usuario) {
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-
-        if (usuario.getRol() == null || usuario.getRol().isEmpty()) {
-            usuario.setRol("USER");
-        }
-
-        usuarioRepository.save(usuario);
-        return "Usuario registrado correctamente con contraseña encriptada";
+    public ResponseEntity<AuthResponseDTO> registrarUsuario(@Valid @RequestBody UsuarioCreateDTO dto) {
+        UsuarioDTO creado = usuarioService.crear(dto);
+        AuthResponseDTO response = new AuthResponseDTO(
+                "Usuario registrado exitosamente con credenciales seguras",
+                creado.getId(),
+                creado.getUser(),
+                creado.getEmail(),
+                creado.getRol()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(Authentication authentication) {
-        String email = authentication.getName();
+    public ResponseEntity<AuthResponseDTO> login(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
+        String email = authentication.getName();
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        return ResponseEntity
-                .ok("Inicio de sesión exitoso. Bienvenido " + usuario.getUser() + " (" + usuario.getRol() + ")");
+        AuthResponseDTO response = new AuthResponseDTO(
+                "Inicio de sesión exitoso. Bienvenido(a) al sistema de H-elarte",
+                usuario.getId(),
+                usuario.getUser(),
+                usuario.getEmail(),
+                usuario.getRol()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
