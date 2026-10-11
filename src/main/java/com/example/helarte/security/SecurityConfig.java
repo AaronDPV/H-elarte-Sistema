@@ -46,6 +46,7 @@ public class SecurityConfig {
                         // Endpoints exclusivos de ADMINISTRADOR
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/servicios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/servicios/**").hasRole("ADMIN")

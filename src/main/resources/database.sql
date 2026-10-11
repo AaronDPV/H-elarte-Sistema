@@ -2,6 +2,7 @@
 -- SISTEMA WEB DE GESTIÓN DE RESERVAS Y SERVICIOS "H-ELARTE"
 -- SCRIPT DE BASE DE DATOS MYSQL (DDL & DML)
 -- ========================================================
+SET NAMES utf8mb4;
 DROP DATABASE IF EXISTS helarte;
 CREATE DATABASE helarte
     CHARACTER SET utf8mb4

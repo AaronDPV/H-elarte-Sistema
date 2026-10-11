@@ -1,0 +1,170 @@
+{
+	"info": {
+		"_postman_id": "helarte-api-collection-v1",
+		"name": "Helarte Sistema API - Reservas y Servicios",
+		"description": "Colección completa para pruebas funcionales de la API REST del Sistema H-elarte (Spring Boot + MySQL)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Autenticación",
+			"item": [
+				{
+					"name": "Login (Admin)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "admin@helarte.com", "type": "string" },
+								{ "key": "password", "value": "admin123", "type": "string" }
+							]
+						},
+						"method": "POST",
+						"url": "http://localhost:8080/auth/login"
+					}
+				},
+				{
+					"name": "Registro Público de Cliente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": \"Lucia Fernandez\",\n  \"email\": \"lucia@gmail.com\",\n  \"password\": \"password123\",\n  \"rol\": \"CLIENTE\",\n  \"telefono\": \"987654321\"\n}"
+						},
+						"url": "http://localhost:8080/auth/registro"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Servicios de Heladería",
+			"item": [
+				{
+					"name": "Listar Servicios Activos (Público)",
+					"request": {
+						"method": "GET",
+						"url": "http://localhost:8080/servicios"
+					}
+				},
+				{
+					"name": "Crear Servicio (Admin)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "admin@helarte.com", "type": "string" },
+								{ "key": "password", "value": "admin123", "type": "string" }
+							]
+						},
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Cata Sensorial Vegana\",\n  \"descripcion\": \"Experiencia guiada con helados artesanales base vegetal.\",\n  \"precio\": 55.00,\n  \"duracionMinutos\": 50,\n  \"activo\": true\n}"
+						},
+						"url": "http://localhost:8080/servicios"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Mesas",
+			"item": [
+				{
+					"name": "Listar Todas las Mesas",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "cliente@helarte.com", "type": "string" },
+								{ "key": "password", "value": "cliente123", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"url": "http://localhost:8080/mesas"
+					}
+				},
+				{
+					"name": "Listar Mesas Disponibles",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "cliente@helarte.com", "type": "string" },
+								{ "key": "password", "value": "cliente123", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"url": "http://localhost:8080/mesas/disponibles"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Reservas",
+			"item": [
+				{
+					"name": "Crear Reserva (Cliente)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "cliente@helarte.com", "type": "string" },
+								{ "key": "password", "value": "cliente123", "type": "string" }
+							]
+						},
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mesaId\": 2,\n  \"servicioId\": 2,\n  \"fechaReserva\": \"2026-11-20\",\n  \"horaReserva\": \"17:30\",\n  \"cantidadPersonas\": 4,\n  \"observaciones\": \"Celebración de cumpleaños\"\n}"
+						},
+						"url": "http://localhost:8080/reservas"
+					}
+				},
+				{
+					"name": "Mis Reservas (Cliente)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "cliente@helarte.com", "type": "string" },
+								{ "key": "password", "value": "cliente123", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"url": "http://localhost:8080/reservas/mis-reservas"
+					}
+				},
+				{
+					"name": "Cambiar Estado Reserva a CONFIRMADA (Empleado/Admin)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "empleado@helarte.com", "type": "string" },
+								{ "key": "password", "value": "empleado123", "type": "string" }
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"CONFIRMADA\"\n}"
+						},
+						"url": "http://localhost:8080/reservas/1/estado"
+					}
+				}
+			]
+		}
+	]
+}

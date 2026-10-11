@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend (Excluido de este repositorio) ###
+frontend/
+node_modules/
+.angular/
+
+### Archivos temporales y logs ###
+*.log
+.DS_Store
+Thumbs.db
+
