@@ -9,6 +9,7 @@ import com.example.helarte.model.Reserva;
 import com.example.helarte.model.Servicio;
 import com.example.helarte.model.Usuario;
 import com.example.helarte.repository.MesaRepository;
+import com.example.helarte.repository.PagoRepository;
 import com.example.helarte.repository.ReservaRepository;
 import com.example.helarte.repository.ServicioRepository;
 import com.example.helarte.repository.UsuarioRepository;
@@ -29,16 +30,19 @@ public class ReservaService {
     private final UsuarioRepository usuarioRepository;
     private final MesaRepository mesaRepository;
     private final ServicioRepository servicioRepository;
+    private final PagoRepository pagoRepository;
 
     // Inyección de dependencias por constructor
     public ReservaService(ReservaRepository reservaRepository,
                           UsuarioRepository usuarioRepository,
                           MesaRepository mesaRepository,
-                          ServicioRepository servicioRepository) {
+                          ServicioRepository servicioRepository,
+                          PagoRepository pagoRepository) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.mesaRepository = mesaRepository;
         this.servicioRepository = servicioRepository;
+        this.pagoRepository = pagoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -192,6 +196,14 @@ public class ReservaService {
 
         reserva.setEstado("CANCELADA");
         reservaRepository.save(reserva);
+
+        // Si la reserva ya estaba pagada, el pago pasa a REEMBOLSADO
+        pagoRepository.findByReservaId(id).ifPresent(pago -> {
+            if ("COMPLETADO".equals(pago.getEstado())) {
+                pago.setEstado("REEMBOLSADO");
+                pagoRepository.save(pago);
+            }
+        });
     }
 
     @Transactional

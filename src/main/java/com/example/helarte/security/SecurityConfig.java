@@ -62,6 +62,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/reservas/estado").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
                         .requestMatchers(HttpMethod.PUT, "/reservas/*/estado").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
 
+                        // Pagos: listado general solo para personal; el resto para usuarios autenticados
+                        .requestMatchers(HttpMethod.GET, "/pagos").hasAnyRole("ADMIN", "EMPLEADO", "COLABORADOR")
+                        .requestMatchers(HttpMethod.POST, "/pagos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/pagos/mis-pagos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/pagos/reserva/**").authenticated()
+
                         // Endpoints para CLIENTE autenticado (y roles superiores)
                         .requestMatchers("/reservas/mis-reservas").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reservas").authenticated()

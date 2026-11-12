@@ -58,6 +58,18 @@ CREATE TABLE IF NOT EXISTS reservas (
     CONSTRAINT fk_reserva_servicio FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT
 );
 
+-- Tabla de Pagos (pasarela de pago simulada, un pago por reserva)
+CREATE TABLE IF NOT EXISTS pagos (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    codigo_operacion VARCHAR(30) NOT NULL UNIQUE,
+    reserva_id BIGINT NOT NULL UNIQUE,
+    monto DOUBLE NOT NULL,
+    metodo_pago VARCHAR(30) NOT NULL,
+    estado VARCHAR(30) NOT NULL DEFAULT 'COMPLETADO',
+    fecha_pago DATETIME NOT NULL,
+    CONSTRAINT fk_pago_reserva FOREIGN KEY (reserva_id) REFERENCES reservas(id) ON DELETE RESTRICT
+);
+
 -- Inserción de Datos Iniciales con Hashes BCrypt Reales y Verificados
 -- Credenciales:
 -- admin@helarte.com    -> admin123
