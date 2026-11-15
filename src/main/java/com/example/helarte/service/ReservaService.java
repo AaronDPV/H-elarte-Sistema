@@ -13,6 +13,7 @@ import com.example.helarte.repository.PagoRepository;
 import com.example.helarte.repository.ReservaRepository;
 import com.example.helarte.repository.ServicioRepository;
 import com.example.helarte.repository.UsuarioRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,8 +46,11 @@ public class ReservaService {
         this.pagoRepository = pagoRepository;
     }
 
-    @Transactional(readOnly = true)
+    private static final int DIAS_RETENCION_CANCELADAS = 5;
+
+    @Transactional
     public List<ReservaResponseDTO> listarTodas() {
+        purgarCanceladasMasDeCincoDias();
         return reservaRepository.findAll()
                 .stream()
                 .map(ReservaResponseDTO::fromEntity)
@@ -60,15 +64,16 @@ public class ReservaService {
         return ReservaResponseDTO.fromEntity(reserva);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ReservaResponseDTO> listarPorUsuario(Long usuarioId) {
+        purgarCanceladasMasDeCincoDias();
         return reservaRepository.findByUsuarioId(usuarioId)
                 .stream()
                 .map(ReservaResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ReservaResponseDTO> listarPorUsuarioEmail(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
@@ -78,6 +83,14 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public List<ReservaResponseDTO> listarPorFecha(LocalDate fecha) {
         return reservaRepository.findByFechaReserva(fecha)
+                .stream()
+                .map(ReservaResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservaResponseDTO> listarActivasPorFecha(LocalDate fecha) {
+        return reservaRepository.findActivasPorFecha(fecha)
                 .stream()
                 .map(ReservaResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -121,13 +134,8 @@ public class ReservaService {
                     " personas y se solicitaron " + dto.getCantidadPersonas());
         }
 
-        // Validar conflicto de reserva en la misma mesa y horario
-        List<Reserva> conflictos = reservaRepository.findConflictosMesa(mesa.getId(), dto.getFechaReserva(), dto.getHoraReserva());
-        if (!conflictos.isEmpty()) {
-            throw new BadRequestException("La mesa #" + mesa.getNumeroMesa() +
-                    " ya cuenta con una reserva para la fecha " + dto.getFechaReserva() +
-                    " a las " + dto.getHoraReserva());
-        }
+        // Validar conflicto de reserva en la misma mesa y rango horario (incluyendo duración del servicio)
+        validarCruceDeHorario(mesa, servicio, dto.getFechaReserva(), dto.getHoraReserva(), null);
 
         // Generar código de reserva único
         String fechaStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -164,6 +172,8 @@ public class ReservaService {
             throw new BadRequestException("La capacidad de la mesa #" + mesa.getNumeroMesa() + " es insuficiente");
         }
 
+        validarCruceDeHorario(mesa, servicio, dto.getFechaReserva(), dto.getHoraReserva(), reserva.getId());
+
         reserva.setMesa(mesa);
         reserva.setServicio(servicio);
         reserva.setFechaReserva(dto.getFechaReserva());
@@ -180,7 +190,13 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada con ID: " + id));
 
-        reserva.setEstado(nuevoEstado.toUpperCase());
+        String estadoUpper = nuevoEstado.toUpperCase();
+        reserva.setEstado(estadoUpper);
+        if ("CANCELADA".equals(estadoUpper)) {
+            reserva.setFechaCancelacion(LocalDateTime.now());
+        } else {
+            reserva.setFechaCancelacion(null);
+        }
         Reserva actualizada = reservaRepository.save(reserva);
         return ReservaResponseDTO.fromEntity(actualizada);
     }
@@ -195,6 +211,7 @@ public class ReservaService {
         }
 
         reserva.setEstado("CANCELADA");
+        reserva.setFechaCancelacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
         // Si la reserva ya estaba pagada, el pago pasa a REEMBOLSADO
@@ -210,6 +227,65 @@ public class ReservaService {
     public void eliminar(Long id) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada con ID: " + id));
+        pagoRepository.findByReservaId(id).ifPresent(pagoRepository::delete);
         reservaRepository.delete(reserva);
+    }
+
+    @Transactional
+    public int eliminarCanceladasEnGrupo(List<Long> ids) {
+        List<Reserva> aEliminar;
+        if (ids == null || ids.isEmpty()) {
+            aEliminar = reservaRepository.findByEstado("CANCELADA");
+        } else {
+            aEliminar = reservaRepository.findAllById(ids).stream()
+                    .filter(r -> "CANCELADA".equalsIgnoreCase(r.getEstado()))
+                    .collect(Collectors.toList());
+        }
+        for (Reserva r : aEliminar) {
+            pagoRepository.findByReservaId(r.getId()).ifPresent(pagoRepository::delete);
+        }
+        reservaRepository.deleteAll(aEliminar);
+        return aEliminar.size();
+    }
+
+    @Scheduled(fixedRate = 3600000)
+    @Transactional
+    public int purgarCanceladasMasDeCincoDias() {
+        LocalDateTime limite = LocalDateTime.now().minusDays(DIAS_RETENCION_CANCELADAS);
+        List<Reserva> vencidas = reservaRepository.findCanceladasAntiguas(limite);
+        if (vencidas.isEmpty()) {
+            return 0;
+        }
+        for (Reserva r : vencidas) {
+            pagoRepository.findByReservaId(r.getId()).ifPresent(pagoRepository::delete);
+        }
+        reservaRepository.deleteAll(vencidas);
+        return vencidas.size();
+    }
+
+    private void validarCruceDeHorario(Mesa mesa, Servicio servicio, LocalDate fecha, java.time.LocalTime horaInicio, Long reservaIdIgnorar) {
+        int duracionNueva = (servicio.getDuracionMinutos() != null && servicio.getDuracionMinutos() >= 15)
+                ? servicio.getDuracionMinutos() : 60;
+        int inicioNuevoMin = horaInicio.getHour() * 60 + horaInicio.getMinute();
+        int finNuevoMin = inicioNuevoMin + duracionNueva;
+
+        List<Reserva> reservasDia = reservaRepository.findActivasPorMesaYFecha(mesa.getId(), fecha);
+        for (Reserva existente : reservasDia) {
+            if (reservaIdIgnorar != null && reservaIdIgnorar.equals(existente.getId())) {
+                continue;
+            }
+            int duracionExistente = (existente.getServicio() != null
+                    && existente.getServicio().getDuracionMinutos() != null
+                    && existente.getServicio().getDuracionMinutos() >= 15)
+                    ? existente.getServicio().getDuracionMinutos() : 60;
+            int inicioExistenteMin = existente.getHoraReserva().getHour() * 60 + existente.getHoraReserva().getMinute();
+            int finExistenteMin = inicioExistenteMin + duracionExistente;
+
+            if (inicioNuevoMin < finExistenteMin && inicioExistenteMin < finNuevoMin) {
+                throw new BadRequestException("La mesa #" + mesa.getNumeroMesa() +
+                        " ya cuenta con una reserva para la fecha " + fecha +
+                        " que se cruza con el horario " + horaInicio);
+            }
+        }
     }
 }

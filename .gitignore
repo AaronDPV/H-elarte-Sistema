@@ -34,6 +34,7 @@ build/
 
 ### Frontend (Excluido de este repositorio) ###
 frontend/
+Helarte_FrontEnd/
 node_modules/
 .angular/
 

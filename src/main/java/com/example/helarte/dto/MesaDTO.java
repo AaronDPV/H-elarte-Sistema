@@ -2,6 +2,7 @@ package com.example.helarte.dto;
 
 import com.example.helarte.model.Mesa;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class MesaDTO {
@@ -16,6 +17,7 @@ public class MesaDTO {
     @Min(value = 1, message = "La capacidad mínima es de 1 persona")
     private Integer capacidad;
 
+    @NotBlank(message = "La ubicación de la mesa es obligatoria")
     private String ubicacion;
 
     private String estado;
@@ -81,11 +83,7 @@ public class MesaDTO {
     }
 
     public void setUbicacion(String ubicacion) {
-        this.ubicacion = COMPAT(ubicacion);
-    }
-
-    private String COMPAT(String val) {
-        return val;
+        this.ubicacion = ubicacion;
     }
 
     public String getEstado() {

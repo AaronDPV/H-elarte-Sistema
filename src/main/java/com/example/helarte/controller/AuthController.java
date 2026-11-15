@@ -28,6 +28,8 @@ public class AuthController {
 
     @PostMapping("/registro")
     public ResponseEntity<AuthResponseDTO> registrarUsuario(@Valid @RequestBody UsuarioCreateDTO dto) {
+        // El registro público siempre asigna el rol CLIENTE por seguridad
+        dto.setRol("CLIENTE");
         UsuarioDTO creado = usuarioService.crear(dto);
         AuthResponseDTO response = new AuthResponseDTO(
                 "Usuario registrado exitosamente con credenciales seguras",

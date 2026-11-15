@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,4 +32,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findConflictosMesa(@Param("mesaId") Long mesaId,
                                     @Param("fecha") LocalDate fecha,
                                     @Param("hora") LocalTime hora);
+
+    @Query("SELECT r FROM Reserva r WHERE r.mesa.id = :mesaId AND r.fechaReserva = :fecha AND r.estado <> 'CANCELADA'")
+    List<Reserva> findActivasPorMesaYFecha(@Param("mesaId") Long mesaId,
+                                           @Param("fecha") LocalDate fecha);
+
+    @Query("SELECT r FROM Reserva r WHERE r.fechaReserva = :fecha AND r.estado <> 'CANCELADA' ORDER BY r.horaReserva ASC")
+    List<Reserva> findActivasPorFecha(@Param("fecha") LocalDate fecha);
+
+    @Query("SELECT r FROM Reserva r WHERE r.estado = 'CANCELADA' AND ((r.fechaCancelacion IS NOT NULL AND r.fechaCancelacion <= :fechaLimite) OR (r.fechaCancelacion IS NULL AND r.fechaCreacion <= :fechaLimite))")
+    List<Reserva> findCanceladasAntiguas(@Param("fechaLimite") LocalDateTime fechaLimite);
 }

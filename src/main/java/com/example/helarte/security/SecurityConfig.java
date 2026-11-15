@@ -45,6 +45,7 @@ public class SecurityConfig {
 
                         // Endpoints exclusivos de ADMINISTRADOR
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/reservas/canceladas", "/reservas/canceladas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/usuarios/**").hasRole("ADMIN")
@@ -70,6 +71,7 @@ public class SecurityConfig {
 
                         // Endpoints para CLIENTE autenticado (y roles superiores)
                         .requestMatchers("/reservas/mis-reservas").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/reservas/ocupadas").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reservas").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/reservas/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/reservas/**").authenticated()

@@ -27,13 +27,16 @@ public class ReservaResponseDTO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime fechaCreacion;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime fechaCancelacion;
+
     public ReservaResponseDTO() {
     }
 
     public ReservaResponseDTO(Long id, String codigoReserva, UsuarioDTO usuario, MesaDTO mesa,
                               ServicioDTO servicio, LocalDate fechaReserva, LocalTime horaReserva,
                               Integer cantidadPersonas, String estado, String observaciones,
-                              LocalDateTime fechaCreacion) {
+                              LocalDateTime fechaCreacion, LocalDateTime fechaCancelacion) {
         this.id = id;
         this.codigoReserva = codigoReserva;
         this.usuario = usuario;
@@ -45,6 +48,7 @@ public class ReservaResponseDTO {
         this.estado = estado;
         this.observaciones = observaciones;
         this.fechaCreacion = fechaCreacion;
+        this.fechaCancelacion = fechaCancelacion;
     }
 
     public static ReservaResponseDTO fromEntity(Reserva r) {
@@ -60,7 +64,8 @@ public class ReservaResponseDTO {
                 r.getCantidadPersonas(),
                 r.getEstado(),
                 r.getObservaciones(),
-                r.getFechaCreacion()
+                r.getFechaCreacion(),
+                r.getFechaCancelacion()
         );
     }
 
@@ -150,5 +155,13 @@ public class ReservaResponseDTO {
 
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaCancelacion() {
+        return fechaCancelacion;
+    }
+
+    public void setFechaCancelacion(LocalDateTime fechaCancelacion) {
+        this.fechaCancelacion = fechaCancelacion;
     }
 }

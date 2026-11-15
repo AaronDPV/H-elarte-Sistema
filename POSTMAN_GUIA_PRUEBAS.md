@@ -199,3 +199,51 @@ En Postman, en la pestaña **Authorization**, selecciona:
 - **Método**: `DELETE`
 - **URL**: `http://localhost:8080/reservas/1`
 - **Authorization**: Basic Auth (`cliente@helarte.com` / `cliente123`)
+
+### 5.7 Consultar Horarios Ocupados por Fecha
+- **Método**: `GET`
+- **URL**: `http://localhost:8080/reservas/ocupadas?fecha=2026-10-15`
+- **Authorization**: Basic Auth (Cualquier usuario autenticado)
+
+### 5.8 Eliminar Reservas Canceladas en Grupo (Solo ADMIN)
+- **Método**: `DELETE`
+- **URL (todas las canceladas)**: `http://localhost:8080/reservas/canceladas`
+- **URL (grupo seleccionado por IDs)**: `http://localhost:8080/reservas/canceladas?ids=3,5,8`
+- **Authorization**: Basic Auth (`admin@helarte.com` / `Admin@123`)
+
+### 5.9 Depurar Reservas Canceladas con más de 5 días (Solo ADMIN / Automático)
+- **Método**: `DELETE`
+- **URL**: `http://localhost:8080/reservas/canceladas/vencidas`
+- **Authorization**: Basic Auth (`admin@helarte.com` / `Admin@123`)
+
+---
+
+## 6. Módulo de Pagos (`/pagos`)
+
+### 6.1 Procesar Pago de Reserva (Confirma automáticamente la reserva)
+- **Método**: `POST`
+- **URL**: `http://localhost:8080/pagos`
+- **Authorization**: Basic Auth (`cliente@helarte.com` / `cliente123`)
+- **Body**:
+```json
+{
+  "reservaId": 1,
+  "metodoPago": "YAPE"
+}
+```
+
+### 6.2 Consultar "Mis Pagos" (Cliente)
+- **Método**: `GET`
+- **URL**: `http://localhost:8080/pagos/mis-pagos`
+- **Authorization**: Basic Auth (`cliente@helarte.com` / `cliente123`)
+
+### 6.3 Consultar Pago por ID de Reserva
+- **Método**: `GET`
+- **URL**: `http://localhost:8080/pagos/reserva/1`
+- **Authorization**: Basic Auth (`cliente@helarte.com` / `cliente123` o Personal)
+
+### 6.4 Listar Todos los Pagos (Admin / Empleado)
+- **Método**: `GET`
+- **URL**: `http://localhost:8080/pagos`
+- **Authorization**: Basic Auth (`admin@helarte.com` / `admin123`)
+

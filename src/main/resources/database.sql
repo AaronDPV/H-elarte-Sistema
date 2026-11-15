@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS reservas (
     estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
     observaciones VARCHAR(500),
     fecha_creacion DATETIME NOT NULL,
+    fecha_cancelacion DATETIME NULL,
     CONSTRAINT fk_reserva_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE RESTRICT,
     CONSTRAINT fk_reserva_mesa FOREIGN KEY (mesa_id) REFERENCES mesas(id) ON DELETE RESTRICT,
     CONSTRAINT fk_reserva_servicio FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT

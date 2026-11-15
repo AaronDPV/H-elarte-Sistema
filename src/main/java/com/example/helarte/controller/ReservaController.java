@@ -54,6 +54,13 @@ public class ReservaController {
         return ResponseEntity.ok(reservas);
     }
 
+    @GetMapping("/ocupadas")
+    public ResponseEntity<List<ReservaResponseDTO>> listarOcupadasPorFecha(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        List<ReservaResponseDTO> reservas = reservaService.listarActivasPorFecha(fecha);
+        return ResponseEntity.ok(reservas);
+    }
+
     @GetMapping("/estado")
     public ResponseEntity<List<ReservaResponseDTO>> listarPorEstado(@RequestParam String estado) {
         List<ReservaResponseDTO> reservas = reservaService.listarPorEstado(estado);
@@ -98,6 +105,29 @@ public class ReservaController {
 
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Reserva con ID " + id + " cancelada exitosamente");
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @DeleteMapping("/canceladas")
+    public ResponseEntity<Map<String, Object>> eliminarCanceladasEnGrupo(
+            @RequestParam(required = false) List<Long> ids) {
+        int eliminadas = reservaService.eliminarCanceladasEnGrupo(ids);
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("eliminadas", eliminadas);
+        respuesta.put("mensaje", eliminadas > 0
+                ? "Se eliminaron definitivamente " + eliminadas + " reserva(s) cancelada(s)."
+                : "No había reservas canceladas para eliminar.");
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @DeleteMapping("/canceladas/vencidas")
+    public ResponseEntity<Map<String, Object>> purgarCanceladasMasDeCincoDias() {
+        int eliminadas = reservaService.purgarCanceladasMasDeCincoDias();
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("eliminadas", eliminadas);
+        respuesta.put("mensaje", eliminadas > 0
+                ? "Se depuraron automáticamente " + eliminadas + " reserva(s) cancelada(s) con más de 5 días de antigüedad."
+                : "No hay reservas canceladas con más de 5 días de antigüedad.");
         return ResponseEntity.ok(respuesta);
     }
 }
